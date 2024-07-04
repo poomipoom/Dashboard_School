@@ -14,7 +14,7 @@ data_coordinates = {
         'ชุมพร', 'กาฬสินธุ์', 'กำแพงเพชร', 'กาญจนบุรี', 'ขอนแก่น', 'กระบี่',
         'ลำปาง', 'ลำพูน', 'เลย', 'ลพบุรี', 'แม่ฮ่องสอน', 'มหาสารคาม',
         'มุกดาหาร', 'นครนายก', 'นครปฐม', 'นครพนม', 'นครราชสีมา', 'นครสวรรค์',
-        'นราธิวาส', 'น่าน', 'นราธิวาส', 'หนองบัวลำภู', 'หนองคาย', 'นนทบุรี',
+        'นครศรีธรรมราช', 'น่าน', 'นราธิวาส', 'หนองบัวลำภู', 'หนองคาย', 'นนทบุรี',
         'ปทุมธานี', 'ปัตตานี', 'พัทยา', 'พังงา', 'พัทลุง', 'พะเยา',
         'เพชรบูรณ์', 'เพชรบุรี', 'พิจิตร', 'พิษณุโลก', 'พระนครศรีอยุธยา', 'แพร่',
         'ภูเก็ต', 'ปราจีนบุรี', 'ประจวบคีรีขันธ์', 'ระนอง', 'ราชบุรี', 'ระยอง',
@@ -35,8 +35,9 @@ data_coordinates = {
         7.8804479, 14.0420699, 11.7938389, 9.9528702, 13.5282893, 12.6813957,
         16.0538196, 13.824038, 17.1664211, 13.5990961, 13.5475216, 13.4098217,
         14.5289154, 6.6238158, 15.1186009, 14.8936253, 7.1897659, 43.6485556,
-        14.4744892, 9.1341949, 37.0358271, 45.0299646, 7.5644833, 12.2427563,
-        15.2448453, 17.3646969, 15.3835001, 17.6200886, 44.0579117, 15.792641
+        14.4744892, 9.1341949, 37.0358271, 16.521, 7.5644833, 12.2427563,
+        15.2448453, 17.3646969, 15.3835001, 17.6200886, 6.464, 15.792641
+        
     ],
     'ลองจิจูด': [
         104.6257774, 100.455052, 100.5017651, 103.6464463, 103.1115915, 101.0779596,
@@ -49,9 +50,10 @@ data_coordinates = {
         101.1192804, 99.6425883, 100.3346991, 100.2658516, 100.5876634, 100.1402831,
         98.3922504, 101.6600874, 99.7957564, 98.6084641, 99.8134211, 101.2816261,
         103.6520036, 102.0645839, 104.1486055, 100.5998319, 100.2743956, 100.0022645,
-        100.9101421, 100.0673744, 104.3220095, 100.3967314, 100.5953813, -79.3746639,
-        100.1177128, 99.3334198, -95.6276367, -93.1049815, 99.6239334, 102.5174734,
-        104.8472995, 102.8158924, 100.0245527, 100.0992942, -123.1653848, 104.1452827
+        100.9101421, 100.0673744, 104.3220095, 100.3967314, 100.5953813, 79.3746639,
+        100.1177128, 99.3334198, 95.6276367, 98.929, 99.6239334, 102.5174734,
+        104.8472995, 102.8158924, 100.0245527, 100.0992942, 101.374, 104.1452827
+        
     ]
 }
 
@@ -64,79 +66,80 @@ app = Dash(__name__)
 # Define the app layout
 app.layout = html.Div([
     html.H1(children='Student Data Dashboard', style={'textAlign': 'center', 'color': '#003366'}),
-
+    
+    dcc.Dropdown(
+        id='province-dropdown',
+        options=[{'label': province, 'value': province} for province in df_schools['schools_province'].unique()],
+        value='พังงา',
+        style={'width': '50%', 'margin': 'auto'}
+    ),
+    
+ html.Div(id='summary-section', style={'textAlign': 'center', 'marginTop': '20px'}),
+    
     html.Div([
-        dcc.Dropdown(
-            id='dropdown-selection',
-            options=[{'label': province, 'value': province} for province in df_schools['schools_province'].unique()],
-            value=df_schools['schools_province'].iloc[0],  # Default value
-            style={'width': '50%', 'margin': 'auto'}
-        ),
-    ], style={'textAlign': 'center', 'padding': '20px'}),
-
+        dcc.Graph(id='gender-bar-chart', style={'display': 'inline-block', 'width': '45%'}),
+        dcc.Graph(id='gender-pie-chart', style={'display': 'inline-block', 'width': '45%'})
+    ], style={'textAlign': 'center'}),
+    
     html.Div([
-        dcc.Graph(id='bar-chart'),
-        dcc.Graph(id='pie-chart'),
-        dcc.Graph(id='scatter-map')
-    ], style={'display': 'flex', 'flexWrap': 'wrap', 'justifyContent': 'space-around'})
+        dcc.Graph(id='province-map', style={'display': 'inline-block', 'width': '90%'})
+    ], style={'textAlign': 'center'})
 ])
 
-# Define callback to update graphs based on dropdown selection
-@app.callback(
-    [Output('bar-chart', 'figure'),
-     Output('pie-chart', 'figure'),
-     Output('scatter-map', 'figure')],
-    [Input('dropdown-selection', 'value')]
+# Define the callback to update charts and map based on the selected province
+@callback(
+    [Output('gender-bar-chart', 'figure'),
+     Output('gender-pie-chart', 'figure'),
+     Output('province-map', 'figure'),
+     Output('summary-section', 'children')],
+    [Input('province-dropdown', 'value')]
 )
-def update_graphs(selected_province):
-    dff = df_schools[df_schools['schools_province'] == selected_province]
-
+def update_dashboard(selected_province):
+    filtered_df = df_schools[df_schools['schools_province'] == selected_province]
+    total_students = filtered_df['totalstd'].sum()
+    total_male = filtered_df['totalmale'].sum()
+    total_female = filtered_df['totalfemale'].sum()
+    
+    
     # Bar chart for total students by gender
-    bar_fig = px.bar(
-        dff,
-        x=['totalmale', 'totalfemale'],
-        y='totalstd',
+    bar_chart = px.bar(
+        filtered_df.melt(id_vars='schools_province', value_vars=['totalmale', 'totalfemale', 'totalstd']),
+        x='variable',
+        y='value',
         labels={'x': 'Gender', 'y': 'Total Students'},
-        title=f'Total Students by Gender in {selected_province}'
+        title=f'Total Students by Gender in {selected_province}',
+         color='variable',
+    color_discrete_map={'totalmale': 'blue', 'totalfemale': 'red', 'totalstd': 'black'}
     )
 
-    # Pie chart for gender distribution
-    pie_fig = px.pie(
-        values=[dff['totalmale'].sum(), dff['totalfemale'].sum()],
+    pie_chart = px.pie(
         names=['Male', 'Female'],
-        title=f'Gender Distribution in {selected_province}'
+        values=[total_male, total_female],
+        title=f'Gender Distribution in {selected_province}',
+        color_discrete_map={'Male': 'blue', 'Female': 'red'}
+    )
+    summary_text = [
+        html.H3(f'Total Students: {total_students}', style={'color': '#003366'}),
+        html.H3(f'Total Male Students: {total_male}', style={'color': 'blue'}),
+        html.H3(f'Total Female Students: {total_female}', style={'color': 'red'})
+    ]
+    province_coords = df_coordinates[df_coordinates['จังหวัด'] == selected_province]
+    map_fig = go.Figure(go.Scattermapbox(
+        lat=province_coords['ละติจูด'],
+        lon=province_coords['ลองจิจูด'],
+        mode='markers',
+        marker=go.scattermapbox.Marker(size=14),
+        text=selected_province
+    ))
+    map_fig.update_layout(
+        mapbox_style="open-street-map",
+        mapbox_zoom=7,
+        mapbox_center={"lat": province_coords['ละติจูด'].values[0], "lon": province_coords['ลองจิจูด'].values[0]}
     )
 
-    # Scatter map for province coordinates
-    scatter_fig = px.scatter_mapbox(df_coordinates, lat="ละติจูด", lon="ลองจิจูด", hover_name="จังหวัด",
-                                    hover_data=["จังหวัด"], zoom=5)
+    
 
-    # Highlight selected province with red color and larger size
-    selected_province_data = df_coordinates[df_coordinates['จังหวัด'] == selected_province]
-    selected_province_lat = selected_province_data['ละติจูด'].iloc[0]
-    selected_province_lon = selected_province_data['ลองจิจูด'].iloc[0]
-
-    scatter_fig.add_trace(
-        go.Scattermapbox(
-            lat=[selected_province_lat],
-            lon=[selected_province_lon],
-            mode='markers',
-            marker=go.scattermapbox.Marker(
-                size=12,
-                color='red'
-            ),
-            hoverinfo='skip'
-        )
-    )
-
-    scatter_fig.update_layout(
-        mapbox_style="carto-positron",
-        mapbox_zoom = 10,
-        mapbox_center={"lat": selected_province_lat, "lon": selected_province_lon},
-        margin={"r": 0, "t": 0, "l": 0, "b": 0}
-    )
-
-    return bar_fig, pie_fig, scatter_fig
+    return bar_chart, pie_chart, map_fig, summary_text
 
 # Run the app
 if __name__ == '__main__':
