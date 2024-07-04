@@ -2,9 +2,10 @@ from dash import Dash, html, dcc, callback, Output, Input
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import dash_bootstrap_components as dbc
 
 # Load the school data
-df_schools = pd.read_json('https://gpa.obec.go.th/reportdata/pp3-4_2566_province.json')
+df_schools = pd.read_json("data\pp3-4_2566_province.json")
 
 # Data for province coordinates
 data_coordinates = {
@@ -37,7 +38,6 @@ data_coordinates = {
         14.5289154, 6.6238158, 15.1186009, 14.8936253, 7.1897659, 43.6485556,
         14.4744892, 9.1341949, 37.0358271, 16.521, 7.5644833, 12.2427563,
         15.2448453, 17.3646969, 15.3835001, 17.6200886, 6.464, 15.792641
-        
     ],
     'ลองจิจูด': [
         104.6257774, 100.455052, 100.5017651, 103.6464463, 103.1115915, 101.0779596,
@@ -53,7 +53,6 @@ data_coordinates = {
         100.9101421, 100.0673744, 104.3220095, 100.3967314, 100.5953813, 79.3746639,
         100.1177128, 99.3334198, 95.6276367, 98.929, 99.6239334, 102.5174734,
         104.8472995, 102.8158924, 100.0245527, 100.0992942, 101.374, 104.1452827
-        
     ]
 }
 
@@ -61,11 +60,11 @@ data_coordinates = {
 df_coordinates = pd.DataFrame(data_coordinates)
 
 # Create the Dash app
-app = Dash(__name__)
+app = Dash(__name__,external_stylesheets=[dbc.themes.CYBORG])
 
 # Define the app layout
-app.layout = html.Div([
-    html.H1(children='Student Data Dashboard', style={'textAlign': 'center', 'color': '#003366'}),
+app.layout = html.Div(id='main-container', children=[
+    html.H1(children='High School Graduates Data DashBoard 2023', style={'textAlign': 'center'}),
     
     dcc.Dropdown(
         id='province-dropdown',
@@ -74,20 +73,20 @@ app.layout = html.Div([
         style={'width': '50%', 'margin': 'auto'}
     ),
     
- html.Div(id='summary-section', style={'textAlign': 'center', 'marginTop': '20px'}),
+    html.Div(id='summary-section', style={'textAlign': 'center', 'marginTop': '20px'}),
     
     html.Div([
-        dcc.Graph(id='gender-bar-chart', style={'display': 'inline-block', 'width': '45%'}),
-        dcc.Graph(id='gender-pie-chart', style={'display': 'inline-block', 'width': '45%'})
+        dcc.Graph(id='gender-bar-chart', className='graph-container', style={'display': 'inline-block', 'width': '45%'}),
+        dcc.Graph(id='gender-pie-chart', className='graph-container', style={'display': 'inline-block', 'width': '45%'})
     ], style={'textAlign': 'center'}),
     
     html.Div([
-        dcc.Graph(id='province-map', style={'display': 'inline-block', 'width': '90%'})
+        dcc.Graph(id='province-map', className='graph-container', style={'display': 'inline-block', 'width': '90%'})
     ], style={'textAlign': 'center'})
 ])
 
 # Define the callback to update charts and map based on the selected province
-@callback(
+@app.callback(
     [Output('gender-bar-chart', 'figure'),
      Output('gender-pie-chart', 'figure'),
      Output('province-map', 'figure'),
@@ -100,7 +99,6 @@ def update_dashboard(selected_province):
     total_male = filtered_df['totalmale'].sum()
     total_female = filtered_df['totalfemale'].sum()
     
-    
     # Bar chart for total students by gender
     bar_chart = px.bar(
         filtered_df.melt(id_vars='schools_province', value_vars=['totalmale', 'totalfemale', 'totalstd']),
@@ -108,8 +106,8 @@ def update_dashboard(selected_province):
         y='value',
         labels={'x': 'Gender', 'y': 'Total Students'},
         title=f'Total Students by Gender in {selected_province}',
-         color='variable',
-    color_discrete_map={'totalmale': 'blue', 'totalfemale': 'red', 'totalstd': 'black'}
+        color='variable',
+        color_discrete_map={'totalmale': 'blue', 'totalfemale': 'red', 'totalstd': 'black'}
     )
 
     pie_chart = px.pie(
@@ -118,11 +116,13 @@ def update_dashboard(selected_province):
         title=f'Gender Distribution in {selected_province}',
         color_discrete_map={'Male': 'blue', 'Female': 'red'}
     )
+
     summary_text = [
-        html.H3(f'Total Students: {total_students}', style={'color': '#003366'}),
+        html.H3(f'Total Students: {total_students}', style={'color': '##00a310'}),
         html.H3(f'Total Male Students: {total_male}', style={'color': 'blue'}),
         html.H3(f'Total Female Students: {total_female}', style={'color': 'red'})
     ]
+
     province_coords = df_coordinates[df_coordinates['จังหวัด'] == selected_province]
     map_fig = go.Figure(go.Scattermapbox(
         lat=province_coords['ละติจูด'],
@@ -134,12 +134,12 @@ def update_dashboard(selected_province):
     map_fig.update_layout(
         mapbox_style="open-street-map",
         mapbox_zoom=7,
-        mapbox_center={"lat": province_coords['ละติจูด'].values[0], "lon": province_coords['ลองจิจูด'].values[0]}
+        mapbox_center={"lat": province_coords['ละติจูด'].values[0], "lon": province_coords['ลองจิจูด'].values[0]},
+        margin={"r":0,"t":0,"l":0,"b":0}
     )
 
-    
-
     return bar_chart, pie_chart, map_fig, summary_text
+
 
 # Run the app
 if __name__ == '__main__':
