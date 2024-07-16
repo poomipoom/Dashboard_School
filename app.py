@@ -59,6 +59,8 @@ data_coordinates = {
 # Create DataFrame for province coordinates
 df_coordinates = pd.DataFrame(data_coordinates)
 
+
+
 # Create the Dash app
 app = Dash(__name__,external_stylesheets=[dbc.themes.CYBORG])
 
@@ -82,7 +84,9 @@ app.layout = html.Div(id='main-container', children=[
     
     html.Div([
         dcc.Graph(id='province-map', className='graph-container', style={'display': 'inline-block', 'width': '90%'})
-    ], style={'textAlign': 'center'})
+    ], style={'textAlign': 'center'}),
+    dcc.Interval(id='interval-component', interval=1000, n_intervals=0)
+
 ])
 
 # Define the callback to update charts and map based on the selected province
@@ -118,27 +122,41 @@ def update_dashboard(selected_province):
     )
 
     summary_text = [
-        html.H3(f'Total Students: {total_students}', style={'color': '##00a310'}),
+        html.H3(f'Province: {selected_province}', style={'color': 'white'}),
+        html.H3(f'Total Students: {total_students}', style={'color': '#ffffff'}),
         html.H3(f'Total Male Students: {total_male}', style={'color': 'blue'}),
         html.H3(f'Total Female Students: {total_female}', style={'color': 'red'})
     ]
 
     province_coords = df_coordinates[df_coordinates['จังหวัด'] == selected_province]
-    map_fig = go.Figure(go.Scattermapbox(
+    # map_fig = go.Figure(go.Scattermapbox(
+    #     lat=province_coords['ละติจูด'],
+    #     lon=province_coords['ลองจิจูด'],
+    #     mode='markers',
+    #     marker=go.scattermapbox.Marker(size=14),
+    #     text=selected_province
+    # ))
+    # Create map figure for all provinces
+    map_figure = px.scatter_mapbox(
+        df_schools,
         lat=province_coords['ละติจูด'],
         lon=province_coords['ลองจิจูด'],
-        mode='markers',
-        marker=go.scattermapbox.Marker(size=14),
-        text=selected_province
-    ))
-    map_fig.update_layout(
-        mapbox_style="open-street-map",
-        mapbox_zoom=7,
-        mapbox_center={"lat": province_coords['ละติจูด'].values[0], "lon": province_coords['ลองจิจูด'].values[0]},
-        margin={"r":0,"t":0,"l":0,"b":0}
+        size='totalstd',  # Adjust size of the points based on the number of graduates
+        hover_name=df_coordinates['จังหวัด'],
+        hover_data={'schools_graduates': True, 'ละติจูด': False, 'ลองจิจูด': False},
+        zoom=5,
+        center={'lat': province_coords.iloc[0]['ละติจูด'], 'lon': province_coords.iloc[0]['ลองจิจูด']},
+        mapbox_style='open-street-map'
     )
+    map_figure.update_layout(title='Province Locations and Graduate Numbers')
+    # map_fig.update_layout(
+    #     mapbox_style="open-street-map",
+    #     mapbox_zoom=7,
+    #     mapbox_center={"lat": province_coords['ละติจูด'].values[0], "lon": province_coords['ลองจิจูด'].values[0]},
+    #     margin={"r":0,"t":0,"l":0,"b":0}
+    # )
 
-    return bar_chart, pie_chart, map_fig, summary_text
+    return bar_chart, pie_chart, map_figure, summary_text
 
 
 # Run the app
