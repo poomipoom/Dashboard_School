@@ -80,8 +80,13 @@ app.layout = dbc.Container([
 
     dbc.Row([
         dbc.Col(dcc.Graph(id='province-map'), width=12),
-        dbc.Col(dcc.Graph(id='region-pie-chart'), width=12)
+        
     ], style={'marginTop': '20px'}),  
+
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='region-pie-chart'), width=12),
+    ], style={'marginTop': '20px'}),  
+    
 ])
 
 # Define the callback to update charts and map based on the selected province
@@ -158,22 +163,21 @@ def update_dashboard(selected_province):
             lon=selected_coords['ลองจิจูด'],
             mode='markers+text',
             marker=go.scattermapbox.Marker(size=14, color='red'),
-            # text=selected_coords.apply(
-            #     lambda row: f"{row['จังหวัด']}: {row['Total Students']} students", axis=1
-            # ),
             hoverinfo='none',
             name=f"{selected_coords['จังหวัด'].iloc[0]}: {selected_coords['Total Students'].iloc[0]} students"
         ))
         map_fig.update_layout(
             mapbox_style="open-street-map",
             mapbox_zoom=5,
-            mapbox_center={"lat": selected_coords['ละติจูด'].iloc[0], "lon": selected_coords['ลองจิจูด'].iloc[0]}
+            mapbox_center={"lat": selected_coords['ละติจูด'].iloc[0], "lon": selected_coords['ลองจิจูด'].iloc[0]},
+            title='Thailand Graduate Total Students Map'
         )
     else:
         map_fig.update_layout(
             mapbox_style="open-street-map",
             mapbox_zoom=5,
-            mapbox_center={"lat": 13.736717, "lon": 100.523186}  # Default to Bangkok if no data
+            mapbox_center={"lat": 13.736717, "lon": 100.523186},
+            title='Thailand Graduate Total Students Map'  # Default to Bangkok if no data
         )
 
     # Pie chart for total students by region

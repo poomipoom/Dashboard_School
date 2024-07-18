@@ -1,0 +1,31 @@
+/* assets/styles.css */
+
+body {
+    background-color: #000000; /* สีพื้นหลังสำหรับทั้งแอป */
+    font-family: Arial, sans-serif; /* กำหนดฟอนต์ */
+}
+
+#main-container {
+    background-color: #000000; /* สีพื้นหลังของคอนเทนต์หลัก */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 90%;
+}
+
+h1, h3 {
+    color: #ffffff; /* สีของหัวข้อ */
+}
+
+#summary-section {
+    margin-bottom: 20px; /* เพิ่มช่องว่างด้านล่าง */
+}
+
+.graph-container {
+    background-color: #3505c6; /* สีพื้นหลังของกราฟ */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    margin: 10px;
+}
